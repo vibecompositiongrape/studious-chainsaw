@@ -1,0 +1,345 @@
+/* LegalStudyBot — student UI stylesheet.
+   Token-based light/dark theming; no framework. */
+
+:root{
+  --paper:#FAF9F7;
+  --surface:#FFFFFF;
+  --ink:#1C1917;
+  --muted:#79716B;
+  --line:#E7E2DB;
+  --brand:#A8232F;
+  --brand-ink:#FFFFFF;
+  --brand-soft:#F7EBEA;
+  --cite-ink:#8A5A1E;
+  --cite-bg:#F6EDDD;
+  --user-bg:#F1EEE9;
+  --overlay:rgba(28,25,23,.5);
+  --shadow:0 1px 2px rgba(28,25,23,.05), 0 8px 24px rgba(28,25,23,.06);
+  --serif:ui-serif, Georgia, "Times New Roman", serif;
+  --sans:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#161311;
+    --surface:#201C19;
+    --ink:#E8E3DC;
+    --muted:#A39B91;
+    --line:#37312B;
+    --brand:#E05A62;
+    --brand-ink:#1C1917;
+    --brand-soft:#3A2426;
+    --cite-ink:#D9A85E;
+    --cite-bg:#332A1D;
+    --user-bg:#282622;
+    --overlay:rgba(10,8,7,.65);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    --logo-bg:#FFFFFF; /* the CUHK logo is dark artwork; give it a light chip */
+  }
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+/* Hard stop against horizontal panning on mobile Safari. */
+html{overflow-x:hidden}
+@supports (overflow:clip){ html{overflow-x:clip} }
+body{max-width:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--brand)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+.hide{display:none !important}
+
+/* ============ App shell ============ */
+/* The chat page is a fixed app frame: only the message pane scrolls.
+   app.js keeps #app sized to the visual viewport when the keyboard opens. */
+.app-body{overflow:hidden; height:100dvh}
+#app{display:flex; flex-direction:column; height:100dvh}
+#app[hidden]{display:none}
+
+/* ============ Header ============ */
+.site-header{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.7rem 1.1rem;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+  position:relative;
+  z-index:20;
+}
+.wordmark{display:flex; align-items:center; gap:.7rem; min-width:0}
+.wordmark img{height:2.1rem; width:auto; display:block; background:var(--logo-bg, transparent); border-radius:6px}
+.wordmark .titles{display:flex; align-items:baseline; gap:.6rem; min-width:0}
+.wordmark .name{font-family:var(--serif); font-weight:700; font-size:1.15rem; white-space:nowrap}
+.wordmark .name em{color:var(--brand); font-style:normal}
+.wordmark .course{
+  font-size:.78rem; color:var(--muted);
+  border-left:1px solid var(--line); padding-left:.6rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.header-tools{display:flex; align-items:center; gap:.45rem; flex-shrink:0}
+.tool{
+  font-size:.8rem; padding:.35rem .75rem; border-radius:999px;
+  border:1px solid var(--line); background:transparent; color:var(--ink);
+  cursor:pointer; white-space:nowrap;
+}
+.tool:hover{border-color:var(--muted)}
+select.tool{appearance:none; -webkit-appearance:none; padding-right:1.4rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='%2379716B'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .55rem center;
+}
+
+/* Overflow menu */
+.menu-wrap{position:relative}
+.menu{
+  position:absolute; right:0; top:calc(100% + .4rem);
+  min-width:13rem;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:.35rem;
+  display:flex; flex-direction:column;
+  z-index:30;
+}
+.menu button, .menu a{
+  display:block; width:100%; text-align:left;
+  font-size:.86rem; color:var(--ink); text-decoration:none;
+  background:none; border:0; border-radius:8px;
+  padding:.5rem .7rem; cursor:pointer;
+}
+.menu button:hover, .menu a:hover{background:var(--user-bg)}
+.menu hr{border:0; border-top:1px solid var(--line); margin:.3rem .4rem}
+
+/* ============ Main chat column ============ */
+main.chat-main{
+  flex:1; overflow-y:auto;
+  scroll-behavior:smooth;
+}
+.chat-col{
+  max-width:44rem; margin:0 auto; padding:1.6rem 1.1rem 1rem;
+  display:flex; flex-direction:column; gap:1.5rem;
+}
+
+/* Hero / empty state */
+.hero{text-align:center; padding:3.2rem 1rem 1rem}
+.hero h2{
+  font-family:var(--serif); font-size:1.9rem; margin:0 0 .4rem;
+  text-wrap:balance;
+}
+.hero p{color:var(--muted); margin:0; font-size:.95rem}
+
+.suggest{display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; padding:.6rem 0 0}
+.suggest .label{
+  width:100%; text-align:center;
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:.1rem;
+}
+.chip{
+  font-size:.83rem; border:1px solid var(--line); background:var(--surface);
+  color:var(--ink); border-radius:999px; padding:.45rem .95rem; cursor:pointer;
+}
+.chip:hover{border-color:var(--brand); color:var(--brand)}
+
+/* Turns */
+.msg{display:flex}
+.msg.user{justify-content:flex-end}
+.msg.user .bubble{
+  background:var(--user-bg);
+  border-radius:14px 14px 4px 14px;
+  padding:.65rem 1rem;
+  max-width:85%;
+  font-size:.95rem;
+  overflow-wrap:break-word;
+}
+.msg.assistant{flex-direction:column; gap:.45rem}
+.bot-meta{
+  display:flex; align-items:center; gap:.5rem;
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted);
+}
+.bot-meta .badge{
+  color:var(--brand); background:var(--brand-soft);
+  padding:.1rem .5rem; border-radius:4px;
+}
+.msg.assistant .bubble{
+  font-size:.97rem; max-width:65ch; overflow-wrap:break-word;
+}
+.bubble p{margin:.35rem 0 .8rem}
+.bubble p:first-child{margin-top:0}
+.bubble p:last-child{margin-bottom:.15rem}
+.bubble ul, .bubble ol{margin:.3rem 0 .8rem; padding-left:1.4rem}
+.bubble li{margin:.2rem 0}
+.bubble h3, .bubble h4{
+  font-family:var(--serif); margin:1rem 0 .35rem; line-height:1.3;
+}
+.bubble h3{font-size:1.08rem}
+.bubble h4{font-size:1rem}
+.bubble code{
+  font-family:var(--mono); font-size:.88em;
+  background:var(--user-bg); padding:.08em .35em; border-radius:4px;
+}
+.bubble .cite{
+  display:inline-block; font-family:var(--mono); font-size:.72rem;
+  color:var(--cite-ink); background:var(--cite-bg);
+  padding:.02rem .45rem; border-radius:4px; white-space:nowrap;
+}
+.bot-actions{display:flex; gap:.4rem; margin-top:.15rem}
+.mini{
+  font-size:.72rem; color:var(--muted); background:none; border:1px solid var(--line);
+  border-radius:6px; padding:.15rem .55rem; cursor:pointer;
+}
+.mini:hover{color:var(--ink); border-color:var(--muted)}
+
+/* Thinking indicator */
+.thinking-label{
+  display:inline-flex; align-items:center; gap:.5rem;
+  color:var(--muted); font-size:.9rem;
+}
+.thinking-label::after{
+  content:''; display:inline-block;
+  width:.9rem; height:.9rem;
+  border:2px solid var(--muted); border-top-color:transparent;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (prefers-reduced-motion: no-preference){
+  .msg{animation:rise .3s ease-out both}
+  @keyframes rise{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+}
+
+/* ============ Composer ============ */
+.composer-wrap{
+  flex-shrink:0;
+  padding:.6rem 1.1rem calc(.7rem + env(safe-area-inset-bottom));
+  background:var(--paper);
+  border-top:1px solid var(--line);
+}
+.composer{
+  max-width:44rem; margin:0 auto;
+  display:flex; align-items:flex-end; gap:.5rem;
+  background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  padding:.5rem .5rem .5rem 1rem;
+  box-shadow:var(--shadow);
+}
+.composer:focus-within{border-color:var(--brand)}
+#prompt{
+  flex:1; resize:none; border:0; outline:0; background:transparent;
+  font-family:var(--sans); color:var(--ink);
+  /* 16px minimum: anything smaller makes iOS Safari auto-zoom on focus */
+  font-size:1rem;
+  line-height:1.5; padding:.42rem 0;
+  min-height:1.5em; max-height:10rem;
+}
+#prompt::placeholder{color:var(--muted)}
+.quiz-btn{
+  font-size:.8rem; border:1px solid var(--line); background:transparent; color:var(--muted);
+  border-radius:10px; padding:.5rem .8rem; cursor:pointer; flex-shrink:0;
+}
+.quiz-btn:hover{color:var(--brand); border-color:var(--brand)}
+.send-btn{
+  width:2.4rem; height:2.4rem; border-radius:12px; border:0; cursor:pointer;
+  background:var(--brand); color:var(--brand-ink);
+  display:grid; place-items:center; flex-shrink:0;
+}
+.send-btn:disabled{opacity:.45; cursor:not-allowed}
+.send-btn svg{width:1.1rem; height:1.1rem}
+.foot-note{
+  max-width:44rem; margin:.45rem auto 0; text-align:center;
+  font-size:.72rem; color:var(--muted);
+}
+.foot-note a{color:inherit}
+
+/* ============ Modals (consent + email) ============ */
+.modal-overlay{
+  position:fixed; inset:0; z-index:50;
+  background:var(--overlay);
+  display:flex; align-items:center; justify-content:center;
+  padding:1rem;
+}
+.modal{
+  width:min(34rem, 100%);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:16px; box-shadow:var(--shadow);
+  padding:1.6rem 1.5rem 1.4rem;
+}
+.modal h2{
+  font-family:var(--serif); font-size:1.35rem; margin:0 0 .6rem; text-wrap:balance;
+}
+.modal p{color:var(--muted); font-size:.92rem; margin:0 0 1rem}
+.consent-checkbox{
+  display:flex; align-items:flex-start; gap:.65rem;
+  text-align:left; margin-bottom:.7rem; cursor:pointer;
+  font-size:.88rem;
+}
+.consent-checkbox input[type="checkbox"]{
+  margin-top:.2rem; width:1.1rem; height:1.1rem; flex-shrink:0;
+  accent-color:var(--brand); cursor:pointer;
+}
+.btn-primary{
+  width:100%;
+  background:var(--brand); color:var(--brand-ink);
+  font-weight:600; font-size:.95rem;
+  border:0; border-radius:10px;
+  padding:.7rem 1rem; cursor:pointer;
+}
+.btn-primary:disabled{opacity:.4; cursor:not-allowed}
+.btn-quiet{
+  background:none; border:1px solid var(--line); color:var(--muted);
+  border-radius:10px; padding:.65rem 1rem; font-size:.9rem; cursor:pointer;
+}
+.btn-quiet:hover{color:var(--ink); border-color:var(--muted)}
+.modal .row{display:flex; gap:.6rem; margin-top:.4rem}
+.modal .row .btn-primary{flex:1}
+.modal input[type="email"]{
+  width:100%; font-size:1rem; color:var(--ink); /* ≥16px: avoid iOS zoom */
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  padding:.6rem .8rem; margin-bottom:.9rem;
+}
+.modal input[type="email"]:focus{outline:2px solid var(--brand); outline-offset:0; border-color:transparent}
+.modal .status{font-size:.85rem; margin:.6rem 0 0; min-height:1.2em}
+.modal .status.ok{color:#2E7D46}
+.modal .status.err{color:var(--brand)}
+
+/* ============ Toast ============ */
+.toast{
+  position:fixed; left:50%; bottom:5.5rem; transform:translateX(-50%);
+  background:var(--ink); color:var(--paper);
+  font-size:.85rem; padding:.5rem 1rem; border-radius:999px;
+  box-shadow:var(--shadow); z-index:60;
+}
+
+/* ============ FAQ page ============ */
+.page-col{max-width:44rem; margin:0 auto; padding:2rem 1.1rem 3rem}
+.page-col h1{font-family:var(--serif); font-size:1.8rem; margin:0 0 1.6rem; text-wrap:balance}
+.page-col h2{font-family:var(--serif); font-size:1.15rem; margin:1.6rem 0 .4rem}
+.page-col p, .page-col li{color:var(--ink); font-size:.95rem}
+.page-col ul{padding-left:1.3rem}
+.page-col li{margin:.4rem 0}
+.page-col .fine{font-size:.82rem; color:var(--muted); margin-top:2rem}
+
+/* ============ Responsive ============ */
+@media (max-width:640px){
+  .site-header{padding:.55rem .7rem; gap:.5rem}
+  .wordmark{gap:.5rem; flex-shrink:1; min-width:0; overflow:hidden}
+  .wordmark .course{display:none}
+  .wordmark img{height:1.7rem}
+  .wordmark .name{font-size:1rem; overflow:hidden; text-overflow:ellipsis}
+  .header-tools{gap:.3rem}
+  .tool{padding:.3rem .55rem; font-size:.76rem}
+  .hero{padding-top:1.6rem}
+  .hero h2{font-size:1.5rem}
+  .suggest .chip{font-size:.78rem; padding:.4rem .8rem}
+  .msg.user .bubble{max-width:92%}
+  .quiz-btn{display:none}
+  .composer-wrap{padding:.5rem .7rem calc(.5rem + env(safe-area-inset-bottom))}
+  .foot-note .foot-extra{display:none}
+  .foot-note{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+}

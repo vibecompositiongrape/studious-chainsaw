@@ -1,0 +1,12 @@
+public_html/config.php
+public_html/logs/
+public_html/uploads/
+public_html/data/
+public_html/extra/
+public_html/index_bm25.json
+public_html/*.bak-*
+public_html/admin/*.bak-*
+public_html/assets/*.bak-*
+public_html/*.zip
+public_html/phpinfo.php
+.DS_Store

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- maximum-scale=1 clamps the page back to 100% if Safari is holding a
+         stale input-focus auto-zoom, and prevents future auto-zoom. Since
+         iOS 10, user-initiated pinch zoom still works regardless. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <title>LegalStudyBot: Hong Kong Constitutional Law</title>
+    <meta name="description" content="AI study aid for the CUHK LAW course Hong Kong Constitutional Law.">
+    <link rel="stylesheet" href="/assets/styles.css?v=20260706-3">
+</head>
+<body class="app-body"
+      data-worker-url="https://holy-shape-0165.r7tffy4ps5.workers.dev"
+      data-rag-url="/data_index.php">
+
+    <!-- Consent Gate -->
+    <div id="consent-gate" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+        <div class="modal">
+            <h2 id="consentTitle">Welcome to LegalStudyBot (Beta)</h2>
+            <p>
+                This studybot is a course aid, not a replacement for careful study. It is built on AI and its output may contain errors. Neither the course instructors nor CUHK LAW is responsible or liable for any consequences resulting from your use.
+            </p>
+            <label class="consent-checkbox">
+                <input type="checkbox" id="c1">
+                <span>I understand that this is an AI study aid and may produce errors. I will verify important information independently.</span>
+            </label>
+            <label class="consent-checkbox">
+                <input type="checkbox" id="c2">
+                <span>I consent to my inputs and the AI's outputs being anonymously logged to evaluate and improve the studybot.</span>
+            </label>
+            <button id="agreeBtn" class="btn-primary" disabled>I Understand and Agree</button>
+        </div>
+    </div>
+
+    <!-- Email transcript dialog -->
+    <div id="emailModal" class="modal-overlay hide" role="dialog" aria-modal="true" aria-labelledby="emailTitle">
+        <div class="modal">
+            <h2 id="emailTitle">Email transcript</h2>
+            <p>We'll send a plain-text copy of this conversation to the address below.</p>
+            <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+            <div class="row">
+                <button id="emailCancel" class="btn-quiet" type="button">Cancel</button>
+                <button id="emailSend" class="btn-primary" type="button">Send transcript</button>
+            </div>
+            <p id="emailStatus" class="status" role="status"></p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until consent) -->
+    <div id="app" hidden>
+
+        <header class="site-header">
+            <div class="wordmark">
+                <a href="https://www.law.cuhk.edu.hk/" target="_blank" rel="noopener noreferrer">
+                    <img src="assets/cuhk-law-logo.png" alt="CUHK LAW">
+                </a>
+                <div class="titles">
+                    <span class="name"><em>Legal</em>StudyBot</span>
+                    <span class="course">Hong Kong Constitutional Law · CUHK LAW</span>
+                </div>
+            </div>
+            <div class="header-tools">
+                <label for="langPicker" class="hide">Language</label>
+                <select id="langPicker" class="tool" title="Answer language">
+                    <option value="en">EN</option>
+                    <option value="zh">中文</option>
+                </select>
+                <button id="newChatBtn" class="tool" type="button">New chat</button>
+                <div class="menu-wrap">
+                    <button id="menuBtn" class="tool" type="button" aria-haspopup="true" aria-expanded="false" aria-label="More options">⋯</button>
+                    <div id="menuPanel" class="menu hide" role="menu">
+                        <button id="copyBtn" type="button" role="menuitem">Copy transcript</button>
+                        <button id="emailBtn" type="button" role="menuitem">Email transcript…</button>
+                        <hr>
+                        <a href="faq.html" role="menuitem">FAQ &amp; about</a>
+                        <a href="https://www.law.cuhk.edu.hk/app/people/prof-stuart-hargreaves/" target="_blank" rel="noopener" role="menuitem">Developed by Stuart Hargreaves</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="chat-main">
+            <div class="chat-col">
+                <!-- Hero (shown initially, hidden after first message) -->
+                <div id="heroCard">
+                    <div class="hero">
+                        <h2>What shall we review today?</h2>
+                        <p>Ask about proportionality, Basic Law structure, case applications, or exam-style hypotheticals.</p>
+                    </div>
+                    <div class="suggest">
+                        <span class="label">Try asking</span>
+                        <button class="chip suggest-chip" type="button" data-prompt="How do the Basic Law and the Bill of Rights Ordinance interact?">Basic Law vs. Bill of Rights</button>
+                        <button class="chip suggest-chip" type="button" data-prompt="Walk me through the proportionality test with an example from the course.">The proportionality test</button>
+                        <button class="chip suggest-chip" type="button" data-prompt="Give me an exam-style hypothetical on freedom of assembly and walk me through how to answer it.">An exam-style hypothetical</button>
+                    </div>
+                </div>
+
+                <!-- Messages rendered here by app.js -->
+                <div id="chatLog" aria-live="polite" aria-label="Conversation"></div>
+            </div>
+        </main>
+
+        <div class="composer-wrap">
+            <form id="chatForm" class="composer">
+                <textarea id="prompt" rows="1" placeholder="Ask about the course…" title="Enter to send, Shift+Enter for a new line" aria-label="Your question"></textarea>
+                <button type="button" id="quizBtn" class="quiz-btn" title="Generate a short self-check quiz from the course materials">Quiz me</button>
+                <button type="submit" id="sendBtn" class="send-btn" aria-label="Send">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M3.4 20.4l17.4-7.5c.8-.35.8-1.45 0-1.8L3.4 3.6c-.66-.29-1.39.2-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/>
+                    </svg>
+                </button>
+            </form>
+            <p class="foot-note">AI study aid — may contain errors. Verify against course materials.<span class="foot-extra"> Conversations are logged anonymously. · © 2025 <a href="https://www.law.cuhk.edu.hk/app/people/prof-stuart-hargreaves/" target="_blank" rel="noopener">Stuart Hargreaves</a></span></p>
+        </div>
+
+    </div>
+
+    <script src="/assets/app.js?v=20260706-3" defer></script>
+</body>
+</html>
