@@ -5,7 +5,7 @@ PHP/Apache chatbot service for the CUHK LAW course *Hong Kong Constitutional Law
 ## Architecture
 
 - **Student UI** — `public_html/index.html` + `assets/app.js` + `assets/styles.css`. A dependency-free chat page (light/dark theming, streaming answers, citation chips, quiz mode, copy/email transcript).
-- **Model calls** — the browser talks to a Cloudflare Worker (URL configured via `data-worker-url` on `<body>` in `index.html`), which holds the DeepSeek API key and the system prompt.
+- **Model calls** — the browser talks to a Cloudflare Worker (URL configured via `data-worker-url` on `<body>` in `index.html`), which holds the DeepSeek API key and the system prompt. Its source is now in `cloudflare/worker.js`; see `cloudflare/README.md` for its separate deployment procedure.
 - **Retrieval** — `data_index.php` serves BM25 results from `index_bm25.json`. The shared tokenizer in `lib/tokenizer.php` handles English words and Chinese character bigrams; the indexer (`admin/reindex.php`) and the query endpoint must always use the same tokenizer.
 - **Admin panel** — `/admin/` (session login) for uploading `.pptx/.ppt/.pdf/.txt` course materials, re-indexing, viewing logs, and the usage dashboard (`dashboard.php`).
 - **Logging** — `log_client.php` appends anonymous Q&A events to `logs/usage.csv` and `logs/usage.ndjson`. No IP addresses or user agents are stored.
@@ -57,8 +57,14 @@ chunks successfully for the diagnostic questions.
   repeated quiz and proportionality request failed, so this is not a reliable workaround.
 
 This establishes that the Worker sometimes finishes without emitting answer text;
-it does not establish why. Its DeepSeek request, upstream response handling, error
-propagation, and completion limits require inspection in the deployed Worker source,
-which is not included in this repository. The frontend response-handling changes
-make these failures explicit and prevent failed turns entering future conversation
-history; they do not repair the underlying Worker/model failure.
+it does not by itself establish why. The subsequently supplied Worker source
+revealed a 1,300-token reasoning-model cap and discarded finish reasons, consistent
+with reasoning exhausting the allowance before an answer begins. The source also
+hard-codes streaming, so the client's stream flag had no effect on those tests.
+
+The replacement in `cloudflare/worker.js` increases the allowance, uses the current
+explicit model identifier, and preserves failure diagnostics. Frontend changes
+display service failures and exclude failed turns from subsequent conversation
+history. The Worker must be deployed separately in Cloudflare; a VPS deployment
+alone will not apply the generation fix. See `cloudflare/README.md` for evidence,
+limitations and validation instructions.
