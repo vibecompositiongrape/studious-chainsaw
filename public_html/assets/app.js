@@ -301,7 +301,7 @@
     if (heroCard) heroCard.classList.add('hide');
 
     addUserBubble(text);
-    messages.push({ role: 'user', content: text });
+    const userMessage = { role: 'user', content: text };
 
     const thinkRow = addThinking();
     input.value = '';
@@ -311,11 +311,21 @@
     const ragContext = await fetchRAG(ragQuery || text, 2);
 
     const body = {
-      messages,
+      messages: [...messages, userMessage],
       rag_context: ragContext,
       lang: currentLang(),
       thread: 'student',
       stream: true,
+    };
+
+    let assistantRow = null;
+    let assistantBubble = null;
+    let acc = '';
+    let frame = null;
+    const render = () => {
+      frame = null;
+      if (assistantBubble) assistantBubble.innerHTML = renderAnswerHTML(acc);
+      scrollChatToBottom();
     };
 
     try {
@@ -324,81 +334,33 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-
-      if (!resp.ok || !resp.body) {
-        thinkRow.remove();
-        addErrorBubble('Sorry—no response from the server. Please try again in a moment.');
-        return;
-      }
-
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buffer = '';
-      let acc = '';
-      let assistantRow = null;
-      let assistantBubble = null;
-
-      let needsUpdate = false;
-      let streaming = true;
-
-      const pumpRender = () => {
-        if (needsUpdate && assistantBubble) {
-          assistantBubble.innerHTML = renderAnswerHTML(acc);
-          needsUpdate = false;
-          scrollChatToBottom();
+      acc = await ChatResponse.readAssistantResponse(resp, (answer) => {
+        acc = answer;
+        if (!assistantRow) {
+          thinkRow.remove();
+          const created = makeAssistantRow();
+          assistantRow = created.row;
+          assistantBubble = created.bubble;
         }
-        if (streaming) requestAnimationFrame(pumpRender);
-      };
-      requestAnimationFrame(pumpRender);
+        if (frame === null) frame = requestAnimationFrame(render);
+      });
+      if (frame !== null) cancelAnimationFrame(frame);
+      render();
+      addAssistantActions(assistantRow, acc);
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += dec.decode(value, { stream: true });
-        const lines = buffer.split(/\r?\n/);
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-          const payload = line.slice(5).trim();
-          if (!payload || payload === '[DONE]') continue;
-
-          let j;
-          try { j = JSON.parse(payload); } catch { continue; }
-          const delta = j?.choices?.[0]?.delta?.content;
-          if (typeof delta !== 'string') continue;
-
-          if (!assistantRow) {
-            thinkRow.remove();
-            const created = makeAssistantRow();
-            assistantRow = created.row;
-            assistantBubble = created.bubble;
-          }
-
-          acc += delta;
-          needsUpdate = true;
-        }
-      }
-
-      streaming = false;
-
-      if (assistantBubble) {
-        assistantBubble.innerHTML = renderAnswerHTML(acc || 'Sorry—no content.');
-        addAssistantActions(assistantRow, acc);
-        scrollChatToBottom();
-      } else {
-        thinkRow.remove();
-        addErrorBubble('Sorry—empty response. Please try again.');
-      }
-
-      messages.push({ role: 'assistant', content: acc });
-
+      // Commit only completed turns; failures must not poison the next request.
+      messages.push(userMessage, { role: 'assistant', content: acc });
       logEvent('q', text);
-      if (acc) logEvent('a', acc);
+      logEvent('a', acc);
     } catch (e) {
       thinkRow.remove();
-      addErrorBubble('Network error contacting the assistant. Please check your connection and retry.');
+      if (assistantRow) assistantRow.remove();
+      const message = e instanceof ChatResponse.ResponseError
+        ? e.message
+        : 'Network error contacting the assistant. Please check your connection and retry.';
+      addErrorBubble(message);
     } finally {
+      if (frame !== null) cancelAnimationFrame(frame);
       setBusy(false);
       input.focus();
     }
