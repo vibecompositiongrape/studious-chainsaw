@@ -35,3 +35,30 @@ Do not commit production secrets, logs, generated indexes, or uploaded course ma
 ## After deploying tokenizer or indexer changes
 
 Run **Force full re-index** from the admin panel so `index_bm25.json` is rebuilt with the current tokenizer (required for Chinese-language retrieval to work).
+
+## Chat response tests
+
+Run `node --test tests/*.test.cjs` with Node 22 or later. No npm dependencies are required.
+The tests cover response parsing, service errors, incomplete answers, rendering cleanup,
+and exclusion of failed turns from subsequent model requests.
+
+## Empty-response investigation (7 September 2026)
+
+Direct HTTP requests reproduced the student screenshot without using a browser.
+The live JavaScript matched this repository. Retrieval returned course-material
+chunks successfully for the diagnostic questions.
+
+- A Basic Law question returned a complete answer, both without and with retrieved context.
+- The exact self-check quiz prompt returned HTTP 200 with `text/event-stream`,
+  keep-alive comments, and `[DONE]`, but no answer data. A repeat also failed.
+- A fresh `teach me about proportionality` request with retrieved context also
+  returned no answer data, without any preceding empty assistant message.
+- Sending `stream: false` still produced SSE. A quiz succeeded once, but the
+  repeated quiz and proportionality request failed, so this is not a reliable workaround.
+
+This establishes that the Worker sometimes finishes without emitting answer text;
+it does not establish why. Its DeepSeek request, upstream response handling, error
+propagation, and completion limits require inspection in the deployed Worker source,
+which is not included in this repository. The frontend response-handling changes
+make these failures explicit and prevent failed turns entering future conversation
+history; they do not repair the underlying Worker/model failure.
